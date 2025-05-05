@@ -194,8 +194,12 @@ class TestRsyncTrayApp(unittest.TestCase):
                 }
             }
 
-            # Run setup_timers
-            app.setup_timers()
+            with patch('src.main.QTimer') as mock_timer_class:
+                    # Run setup_timers
+                app.setup_timers()
+
+                # Verify a QTimer was created
+                self.assertEqual(mock_timer_class.call_count, 1)
 
             # Check that the old timer was stopped
             self.assertEqual(timer.stop.call_count, 1)
@@ -223,7 +227,12 @@ class TestRsyncTrayApp(unittest.TestCase):
             app.tray_icon = self.mock_systray
 
             # Test activation with Trigger reason
-            app.tray_activated(QSystemTrayIcon.ActivationReason.Trigger)
+            # Make sure this patching is correct
+            with patch.object(RsyncTrayApp, 'show_config_dialog') as mock_show_config:
+                # Then simulate the signal properly
+                app.tray_icon.activated.emit(QSystemTrayIcon.ActivationReason.Trigger)
+                # Or call the signal handler directly
+                app.tray_activated(QSystemTrayIcon.ActivationReason.Trigger)
             self.assertEqual(mock_show_config.call_count, 1)
 
     def test_show_config_dialog(self):
@@ -324,8 +333,13 @@ class TestRsyncTrayApp(unittest.TestCase):
             self.mock_timer.singleShot.reset_mock()
             self.app_instance.exec.reset_mock()
 
-            # Run the app
-            app.run()
+            # Patch the static method properly
+            with patch('src.main.QTimer.singleShot') as mock_single_shot:
+                # Run the app
+                app.run()
+
+                # Verify QTimer.singleShot was called
+                self.assertEqual(mock_single_shot.call_count, 1)
 
             # Verify QTimer.singleShot was called
             self.assertEqual(self.mock_timer.singleShot.call_count, 1)

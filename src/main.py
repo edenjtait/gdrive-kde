@@ -82,7 +82,7 @@ class RsyncTrayApp:
             self.sync_manager.start_sync(job_name)
 
     def show_about(self):
-        QMessageBox.about(None, "About Rsync Folder Manager",
+        self.about = QMessageBox.about(None, "About Rsync Folder Manager",
                          "A simple application to manage folder synchronization using rsync.")
 
     def load_config(self):

@@ -66,6 +66,9 @@ class TestIntegration(unittest.TestCase):
         # Setup mock instance that tracks calls correctly
         mock_syncmgr = MockSyncManager()
 
+        # Add after app initialization but before assertions:
+        mock_syncmgr.add_job.reset_mock()
+
         # Create a test config file with sync jobs
         config_file, self.config_dir = create_test_config([
             {
@@ -197,16 +200,19 @@ class TestIntegration(unittest.TestCase):
         syncmgr_patcher.start()
 
         try:
-            # Create app with mocked components
             with patch('src.main.os.path.expanduser', return_value=config_file), \
-                 patch('src.main.os.path.exists', return_value=True), \
-                 patch.object(RsyncTrayApp, 'setup_tray'), \
-                 patch.object(RsyncTrayApp, 'setup_timers'):
+                patch('src.main.os.path.exists', return_value=True), \
+                patch.object(RsyncTrayApp, 'setup_tray'), \
+                patch.object(RsyncTrayApp, 'setup_timers'):
 
                 app = RsyncTrayApp()
+
+                # Reset mock counters after initialization but before test-specific calls
+                mock_syncmgr.add_job.reset_mock()
+
                 app.load_config()
 
-                # Verify jobs were added from config
+                # Now verify only the NEW calls to add_job
                 self.assertEqual(mock_syncmgr.add_job.call_count, 1)
         finally:
             # Stop all patchers
